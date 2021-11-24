@@ -2,8 +2,11 @@
 #+REVEAL_REVEAL_JS_VERSION: 4
 #+OPTIONS: toc:nil
 
-#+TITLE: Combinatory Logic ≅ Lambda Calculus + Haskell
+#+TITLE: (Combinatory Logic ≅ Lambda Calculus) + Haskell
 #+AUTHOR: Lucas Dutton
+
+#+PROPERTIES: :reveal_background: #123456
+#+REVEAL_TITLE_SLIDE: <h2>%t</h2><h4>%a</h4><h3 %d</h3>
 
 * Preliminaries
 
@@ -41,7 +44,7 @@ i :: a -> a
 i x = x
 #+END_SRC
 
-** What type of language is haskell?
+** What type of language is Haskell?
 Haskell is:
 - Pure, no side effects when executing code
 - Strongly typed - each term and function has a type
