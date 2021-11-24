@@ -1,0 +1,312 @@
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_REVEAL_JS_VERSION: 4
+#+OPTIONS: toc:nil
+
+#+TITLE: Combinatory Logic ≅ Lambda Calculus + Haskell
+#+AUTHOR: Lucas Dutton
+
+* Preliminaries
+
+** Following along the presentation
+
+You can download this presentation as an org-mode file,
+along with all the source code here:
+
+** Installing GHC
+
+If you want to play around with the Haskell code, you need
+the Glasgow Haskell Compiler (GHC). Just go to this site
+
+https://www.haskell.org/ghcup/
+
+and it has all the instructions you need based on your OS.
+
+* Combinatory Logic with Haskell
+
+** SKI Introduction
+Let's encode the SKI combinators as "normal" functions in Haskell:
+
+#+BEGIN_SRC haskell :tangle Combinators.hs
+module Combinators where
+
+s :: (a -> b -> c) -> (a -> b) -> a -> c
+s x y z = x z (y z)
+
+k :: a -> b -> a
+k x y = x
+
+i :: a -> a
+i x = x
+#+END_SRC
+
+** What type of language is haskell?
+Haskell is:
+- Pure, no side effects when executing code
+- Strongly typed - each term and function has a type
+- Lazy - only evaluate things as necessary
+
+** Building an SKI combinator evaluator
+
+*** Defining Data Type
+We don't usually use the combinators above in everyday programming
+(although the K and I combinators are defined in the standard library
+under different names).
+
+Let's try and build a new data type for the SKI combinators instead:
+
+#+REVEAL: split
+
+The file is ~CombinatorsData.hs~
+#+BEGIN_SRC haskell :tangle CombinatorsData.hs
+module CombinatorsData where
+
+type Name = String -- This just type aliases Name to String
+
+data SKI =
+    I
+  | K
+  | S
+  | SVar Name  -- in OCaml, this is like ~Var of Name~
+  | T SKI SKI -- in OCaml, this is like ~T of SKI*SKI~
+  | SLit Int   -- We'll use this later...
+  deriving (Eq)
+#+END_SRC
+
+The last definition, ~T SKI SKI~, acts like brackets, e.g. ~T x y ⇒ (x y)~
+
+*** Evaluator and pretty printer
+We can define a simple evaluator:
+
+#+BEGIN_SRC haskell :tangle CombinatorsData.hs
+eval :: SKI -> SKI
+eval (T I x) = eval x -- I x = x
+eval (T (T K x) y) = eval x -- K x y = x
+eval (T (T (T S x) y) z) = eval $ T ((T x z)) ((T y z)) -- S x y z = x z (y z)
+eval (T x y) = T (eval x) (eval y) -- If we have (x y), evaluate x and y
+eval (SVar name) = SVar name -- We don't have to evaluate variables
+eval p = error $ "pattern failed to evaluate: " <> show p
+#+END_SRC
+
+And also a simple "pretty" printer:
+
+#+BEGIN_SRC haskell :tangle CombinatorsData.hs
+instance Show SKI where
+  show I = "I"
+  show K = "K"
+  show S = "S"
+  show (SVar x) = x
+  show (T x y) = "(" <> show x <> show y <> ")"
+  show (SLit i) = "(" <> show i <> ")"
+#+END_SRC
+
+*** Test code
+Now let's show that ~SKKx~ is equal to ~x~
+#+BEGIN_SRC haskell :tangle CombinatorsData.hs
+skkx = (T (T (T S K) K) (SVar "x")) -- (((S K) K) x)
+print_skkx = print skkx
+eval_skkx = eval skkx
+#+END_SRC
+
+* Lambda Calculus in Haskell
+
+Let's now see Lambda Calculus in Haskell:
+
+The file is ~Lambda.hs~
+#+BEGIN_SRC haskell :tangle Lambda.hs
+module Lambda where
+
+type Name = String
+
+data Expr
+  = Var Name
+  | App Expr Expr
+  | Abs Name Expr
+  | Lit Int
+  | Op BinOp Expr Expr
+  deriving (Show, Eq)
+#+END_SRC
+
+** Added niceties
+With the ~Var~, ~App~ and ~Abs~ constructor we have a the complete
+lambda calculus. But instead of encoding arithmetic with
+the Church Numerals, I just hardcoded the arithmetic into the system.
+
+(For more information on Church Numerals: https://en.wikipedia.org/wiki/Church_encoding)
+
+#+REVEAL: split
+
+We haven't defined our binary ops yet, they are just the normal arithmetic ones:
+
+#+BEGIN_SRC haskell :tangle Lambda.hs
+data BinOp
+  = Plus
+  | Minus
+  | Mul
+  | Div
+  deriving (Show, Eq)
+#+END_SRC
+
+** Example expression
+
+With this, we can now define a simple arithmetic expression:
+
+~f x y = 3 * x + y~
+
+Of course, this would be represented as
+
+~λ x. λ y. + ((* 3 x)) y~
+
+#+BEGIN_SRC haskell :tangle Lambda.hs
+sample :: Expr
+sample = Abs "x" (Abs "y"
+  (Op Plus (Op Mul (Lit 3) (Var "x")) (Var "y")))
+#+END_SRC
+
+* Converting Lambda Terms into Combinatory Logic
+
+Instead of creating an ~eval~ like we did for the SKI combinators for our lambda calculus,
+why don't we convert our lambda term into an SKI equivalent and make use of the evaluator
+there instead!
+
+** Translation rules
+
+Define ~T[]~ as our translation scheme that takes an arbitrary lambda calculi term
+and converts it to an equivalent SKI combinator.
+
+#+REVEAL: split
+Then we define ~T[]~ as follows:
+
+#+ATTR_REVEAL: :frag (appear)
+1. $T[x] => x$
+2. $T[(E₁ E₂)] => (T[E₁] T[E₂])$
+3. $T[λx.E] => \textbf{K}\ (T[E])$ if ¬occurs(x, E)
+4. $T[λx.x] => \textbf{I}$
+5. $T[λx.λy.E] => T[λx.T[λy.E]]$ if occurs(x, E)
+6. $T[λx.(E₁ E₂)] => \textbf{S}\ T[λx.E₁] T[λx.E₂]$ if occurs(x, E₁) and occurs(x, E₂)
+
+** Coded in Haskell...
+
+This is now in ~Convert.hs~
+#+BEGIN_SRC haskell :tangle Convert.hs :exports none
+module Convert where
+
+import Lambda (Expr(..), BinOp(..), sample)
+import CombinatorsData
+#+END_SRC
+
+- For ~Var~ and ~App~ those are just Rules 1, 2 respectively
+- For ~Abs~, I make a separate function to deal with them
+- Actually we deal with Rule 5 already here - ~abstract~ "flattens" all lambdas!
+#+BEGIN_SRC haskell :tangle Convert.hs
+translate :: Expr -> SKI
+translate (Var x) = SVar x
+translate (App e1 e2) = T (translate e1) (translate e2)
+translate (Abs x e) = abstract x (translate e)
+translate (Lit x) = SLit x
+#+END_SRC
+
+#+REVEAL: split
+
+- If we have a function application, then we apply Rule 6
+- If we have a variable equal to the function argument, that's Rule 4
+- Otherwise, we just have Rule 3
+#+BEGIN_SRC haskell :tangle Convert.hs
+abstract :: Name -> SKI -> SKI
+abstract x (T e1 e2) = combS (abstract x e1) (abstract x e2)
+abstract x (SVar n) | x == n = I
+abstract _ k = combK k
+
+-- Show eta-reduction here...
+combS :: SKI -> SKI -> SKI
+combS f = T (T S f)
+
+combK :: SKI -> SKI
+combK = T K
+#+END_SRC
+
+*** Aside - Converting the ~BinOp~
+
+Notice how the SKI calculus doesn't really support arithmetic - in this case
+we have to "desugar" them into the original 3 lambda terms - ~Var~, ~App~ and
+ ~Abs~.
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+desugar :: Expr -> Expr
+desugar (App e1 e2) = App (desugar e1) (desugar e2)
+desugar (Abs x e) = Abs x (desugar e)
+desugar (Op op a b) = foldl App (Var n) args
+  where
+    args = map desugar [a,b]
+    n = case op of
+      Plus -> "$PLUS"
+      Minus -> "$MINUS"
+      Mul -> "$MUL"
+      Div -> "$DIV"
+desugar e = e
+#+END_SRC
+
+*** Translate + Desugar
+
+We can now convert a lambda expression into the SKI combinators:
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+convert = translate . desugar
+#+END_SRC
+
+*** Testing out the converter
+
+Lets convert the ~sample~ expression into the SKI equivalent:
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+sampleSKI = convert sample
+#+END_SRC
+
+** Coding a new SKI Evaluator
+
+Since we now have special variables for arithmetic, we need to
+redefine our SKI evaluator.
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+eval' :: SKI -> SKI
+eval' (T I x) = eval' x -- I x = x
+eval' (T (T K x) y) = eval' x -- K x y = x
+eval' (T (T (T S x) y) z) = eval' $ T ((T x z)) ((T y z)) -- S x y z = x z (y z)
+eval' (T (T (SVar name) (SLit x)) (SLit y))
+  | name `elem` ["$PLUS", "$MINUS", "$MUL", "$DIV"] = arith name x y
+eval' (T x y) = T (eval' x) (eval' y) -- If we have (x y), evaluate x and y
+eval' (SVar name) = SVar name
+eval' p = p
+#+END_SRC
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+arith :: Name -> Int -> Int -> SKI
+arith "$PLUS"  x y = SLit (x + y)
+arith "$MINUS" x y = SLit (x - y)
+arith "$MUL"   x y = SLit (x * y)
+arith "$DIV"   x y = SLit (x `div` y)
+#+END_SRC
+
+** More test cases
+
+Evaluating ~sampleSKI~ is uninteresting, as we haven't fully applied the function yet...
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+evalSample = eval' sampleSKI
+#+END_SRC
+
+#+REVEAL: split
+Let's see what happens when we apply arguments to it:
+
+#+BEGIN_SRC haskell :tangle Convert.hs
+sampleApplied = App (App sample (Lit 2)) (Lit 4)
+
+-- 3 * 2 + 4 = 10
+evalSampleApplied = appUntil eval' (translate sampleApplied)
+
+appUntil f x = let y = f x in if x == y then x else appUntil f y
+#+END_SRC
+
+* References
+
+- "The Implementation of Functional Programming Languages", Simon Peyton Jones, 1987
+- https://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html

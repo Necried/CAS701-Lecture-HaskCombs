@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Combinatory Logic ≅ Lambda Calculus + Haskell</title>
+<meta name="author" content="(Lucas Dutton)"/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.css"/>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js/dist/theme/black.css" id="theme"/>
+
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<section>
+<section id="slide-org8d7ba7a">
+<h2 id="org8d7ba7a"><span class="section-number-2">1.</span> Preliminaries</h2>
+<div class="outline-text-2" id="text-1">
+</div>
+</section>
+<section id="slide-org2476e54">
+<h3 id="org2476e54"><span class="section-number-3">1.1.</span> Following along the presentation</h3>
+<p>
+You can download this presentation as an org-mode file,
+along with all the source code here:
+</p>
+
+</section>
+<section id="slide-org7c8c723">
+<h3 id="org7c8c723"><span class="section-number-3">1.2.</span> Installing GHC</h3>
+<p>
+If you want to play around with the Haskell code, you need
+the Glasgow Haskell Compiler (GHC). Just go to this site
+</p>
+
+<p>
+<a href="https://www.haskell.org/ghcup/">https://www.haskell.org/ghcup/</a>
+</p>
+
+<p>
+and it has all the instructions you need based on your OS.
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-orgf4ac7d5">
+<h2 id="orgf4ac7d5"><span class="section-number-2">2.</span> Combinatory Logic with Haskell</h2>
+<div class="outline-text-2" id="text-2">
+</div>
+</section>
+<section id="slide-orgd6e3a90">
+<h3 id="orgd6e3a90"><span class="section-number-3">2.1.</span> SKI Introduction</h3>
+<p>
+Let's encode the SKI combinators as "normal" functions in Haskell:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #FF5E5E;">module</span> <span style="color: #E9FDAC;">Combinators</span> <span style="color: #FF5E5E;">where</span>
+
+<span style="color: #8CDAFF;">s</span> <span style="color: #E9FDAC;">::</span> <span style="color: #C586C0;">(</span>a <span style="color: #E9FDAC;">-&gt;</span> b <span style="color: #E9FDAC;">-&gt;</span> c<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #C586C0;">(</span>a <span style="color: #E9FDAC;">-&gt;</span> b<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">-&gt;</span> a <span style="color: #E9FDAC;">-&gt;</span> c
+<span style="color: #8CDAFF;">s</span> x y z <span style="color: #E9FDAC;">=</span> x z <span style="color: #C586C0;">(</span>y z<span style="color: #C586C0;">)</span>
+
+<span style="color: #8CDAFF;">k</span> <span style="color: #E9FDAC;">::</span> a <span style="color: #E9FDAC;">-&gt;</span> b <span style="color: #E9FDAC;">-&gt;</span> a
+<span style="color: #8CDAFF;">k</span> x y <span style="color: #E9FDAC;">=</span> x
+
+<span style="color: #8CDAFF;">i</span> <span style="color: #E9FDAC;">::</span> a <span style="color: #E9FDAC;">-&gt;</span> a
+<span style="color: #8CDAFF;">i</span> x <span style="color: #E9FDAC;">=</span> x
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org7c9f61e">
+<h3 id="org7c9f61e"><span class="section-number-3">2.2.</span> What type of language is haskell?</h3>
+<p>
+Haskell is:
+</p>
+<ul>
+<li>Pure, no side effects when executing code</li>
+<li>Strongly typed - each term and function has a type</li>
+<li>Lazy - only evaluate things as necessary</li>
+
+</ul>
+
+</section>
+<section id="slide-org4feba56">
+<h3 id="org4feba56"><span class="section-number-3">2.3.</span> Building an SKI combinator evaluator</h3>
+<div class="outline-text-3" id="text-2-3">
+</div>
+</section>
+<section id="slide-orgb362b4f">
+<h4 id="orgb362b4f"><span class="section-number-4">2.3.1.</span> Defining Data Type</h4>
+<p>
+We don't usually use the combinators above in everyday programming
+(although the K and I combinators are defined in the standard library
+under different names).
+</p>
+
+<p>
+Let's try and build a new data type for the SKI combinators instead:
+</p>
+
+</section>
+<section id="slide-orgb362b4f-split">
+
+<p>
+The file is <code>CombinatorsData.hs</code>
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #FF5E5E;">module</span> <span style="color: #E9FDAC;">CombinatorsData</span> <span style="color: #FF5E5E;">where</span>
+
+<span style="color: #FF5E5E;">type</span> <span style="color: #E9FDAC;">Name</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">String</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">This just type aliases Name to String</span>
+
+<span style="color: #FF5E5E;">data</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">=</span>
+    <span style="color: #E9FDAC;">I</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">K</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">S</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">SVar</span> <span style="color: #E9FDAC;">Name</span>  <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">in OCaml, this is like ~Var of Name~</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">in OCaml, this is like ~T of SKI*SKI~</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">SLit</span> <span style="color: #E9FDAC;">Int</span>   <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">We'll use this later...</span>
+  <span style="color: #FF5E5E;">deriving</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Eq</span><span style="color: #C586C0;">)</span>
+</code></pre>
+</div>
+
+<p>
+The last definition, <code>T SKI SKI</code>, acts like brackets, e.g. <code>T x y ⇒ (x y)</code>
+</p>
+
+</section>
+<section id="slide-org75354f4">
+<h4 id="org75354f4"><span class="section-number-4">2.3.2.</span> Evaluator and pretty printer</h4>
+<p>
+We can define a simple evaluator:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">eval</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">eval</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">I</span> x<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> eval x <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">I x = x</span>
+<span style="color: #8CDAFF;">eval</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">K</span> x<span style="color: #FC9354;">)</span> y<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> eval x <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">K x y = x</span>
+<span style="color: #8CDAFF;">eval</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">S</span> x<span style="color: #468800;">)</span> y<span style="color: #FC9354;">)</span> z<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> eval <span style="color: #E9FDAC;">$</span> <span style="color: #E9FDAC;">T</span> <span style="color: #C586C0;">(</span><span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> x z<span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span><span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> y z<span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">S x y z = x z (y z)</span>
+<span style="color: #8CDAFF;">eval</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> x y<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">T</span> <span style="color: #C586C0;">(</span>eval x<span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span>eval y<span style="color: #C586C0;">)</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">If we have (x y), evaluate x and y</span>
+<span style="color: #8CDAFF;">eval</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">SVar</span> name<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SVar</span> name <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">We don't have to evaluate variables</span>
+<span style="color: #8CDAFF;">eval</span> p <span style="color: #E9FDAC;">=</span> error <span style="color: #E9FDAC;">$</span> <span style="color: #FBE3BF;">"pattern failed to evaluate: "</span> <span style="color: #E9FDAC;">&lt;&gt;</span> show p
+</code></pre>
+</div>
+
+<p>
+And also a simple "pretty" printer:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #FF5E5E;">instance</span> <span style="color: #E9FDAC;">Show</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #FF5E5E;">where</span>
+  show <span style="color: #E9FDAC;">I</span> <span style="color: #E9FDAC;">=</span> <span style="color: #FBE3BF;">"I"</span>
+  show <span style="color: #E9FDAC;">K</span> <span style="color: #E9FDAC;">=</span> <span style="color: #FBE3BF;">"K"</span>
+  show <span style="color: #E9FDAC;">S</span> <span style="color: #E9FDAC;">=</span> <span style="color: #FBE3BF;">"S"</span>
+  show <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">SVar</span> x<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> x
+  show <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> x y<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #FBE3BF;">"("</span> <span style="color: #E9FDAC;">&lt;&gt;</span> show x <span style="color: #E9FDAC;">&lt;&gt;</span> show y <span style="color: #E9FDAC;">&lt;&gt;</span> <span style="color: #FBE3BF;">")"</span>
+  show <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">SLit</span> i<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #FBE3BF;">"("</span> <span style="color: #E9FDAC;">&lt;&gt;</span> show i <span style="color: #E9FDAC;">&lt;&gt;</span> <span style="color: #FBE3BF;">")"</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org252982b">
+<h4 id="org252982b"><span class="section-number-4">2.3.3.</span> Test code</h4>
+<p>
+Now let's show that <code>SKKx</code> is equal to <code>x</code>
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">skkx</span> <span style="color: #E9FDAC;">=</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">S</span> <span style="color: #E9FDAC;">K</span><span style="color: #468800;">)</span> <span style="color: #E9FDAC;">K</span><span style="color: #FC9354;">)</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">SVar</span> <span style="color: #FBE3BF;">"x"</span><span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">(((S K) K) x)</span>
+<span style="color: #8CDAFF;">print_skkx</span> <span style="color: #E9FDAC;">=</span> print skkx
+<span style="color: #8CDAFF;">eval_skkx</span> <span style="color: #E9FDAC;">=</span> eval skkx
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org52c9c58">
+<h2 id="org52c9c58"><span class="section-number-2">3.</span> Lambda Calculus in Haskell</h2>
+<p>
+Let's now see Lambda Calculus in Haskell:
+</p>
+
+<p>
+The file is <code>Lambda.hs</code>
+</p>
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #FF5E5E;">module</span> <span style="color: #E9FDAC;">Lambda</span> <span style="color: #FF5E5E;">where</span>
+
+<span style="color: #FF5E5E;">type</span> <span style="color: #E9FDAC;">Name</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">String</span>
+
+<span style="color: #FF5E5E;">data</span> <span style="color: #E9FDAC;">Expr</span>
+  <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">Var</span> <span style="color: #E9FDAC;">Name</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">App</span> <span style="color: #E9FDAC;">Expr</span> <span style="color: #E9FDAC;">Expr</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">Abs</span> <span style="color: #E9FDAC;">Name</span> <span style="color: #E9FDAC;">Expr</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">Lit</span> <span style="color: #E9FDAC;">Int</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">Op</span> <span style="color: #E9FDAC;">BinOp</span> <span style="color: #E9FDAC;">Expr</span> <span style="color: #E9FDAC;">Expr</span>
+  <span style="color: #FF5E5E;">deriving</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Show</span>, <span style="color: #E9FDAC;">Eq</span><span style="color: #C586C0;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orge91fb57">
+<h3 id="orge91fb57"><span class="section-number-3">3.1.</span> Added niceties</h3>
+<p>
+With the <code>Var</code>, <code>App</code> and <code>Abs</code> constructor we have a the complete
+lambda calculus. But instead of encoding arithmetic with
+the Church Numerals, I just hardcoded the arithmetic into the system.
+</p>
+
+<p>
+(For more information on Church Numerals: <a href="https://en.wikipedia.org/wiki/Church_encoding">https://en.wikipedia.org/wiki/Church_encoding</a>)
+</p>
+
+</section>
+<section id="slide-orge91fb57-split">
+
+<p>
+We haven't defined our binary ops yet, they are just the normal arithmetic ones:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #FF5E5E;">data</span> <span style="color: #E9FDAC;">BinOp</span>
+  <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">Plus</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">Minus</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">Mul</span>
+  <span style="color: #E9FDAC;">|</span> <span style="color: #E9FDAC;">Div</span>
+  <span style="color: #FF5E5E;">deriving</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Show</span>, <span style="color: #E9FDAC;">Eq</span><span style="color: #C586C0;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org51061fe">
+<h3 id="org51061fe"><span class="section-number-3">3.2.</span> Example expression</h3>
+<p>
+With this, we can now define a simple arithmetic expression:
+</p>
+
+<p>
+<code>f x y = 3 * x + y</code>
+</p>
+
+<p>
+Of course, this would be represented as
+</p>
+
+<p>
+<code>λ x. λ y. + ((* 3 x)) y</code>
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">sample</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">Expr</span>
+<span style="color: #8CDAFF;">sample</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">Abs</span> <span style="color: #FBE3BF;">"x"</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Abs</span> <span style="color: #FBE3BF;">"y"</span>
+  <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">Op</span> <span style="color: #E9FDAC;">Plus</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">Op</span> <span style="color: #E9FDAC;">Mul</span> <span style="color: #85DDFF;">(</span><span style="color: #E9FDAC;">Lit</span> <span style="color: #FC9354; font-weight: bold;">3</span><span style="color: #85DDFF;">)</span> <span style="color: #85DDFF;">(</span><span style="color: #E9FDAC;">Var</span> <span style="color: #FBE3BF;">"x"</span><span style="color: #85DDFF;">)</span><span style="color: #468800;">)</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">Var</span> <span style="color: #FBE3BF;">"y"</span><span style="color: #468800;">)</span><span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span>
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-org96125ac">
+<h2 id="org96125ac"><span class="section-number-2">4.</span> Converting Lambda Terms into Combinatory Logic</h2>
+<p>
+Instead of creating an <code>eval</code> like we did for the SKI combinators for our lambda calculus,
+why don't we convert our lambda term into an SKI equivalent and make use of the evaluator
+there instead!
+</p>
+
+</section>
+<section id="slide-orgabce8ad">
+<h3 id="orgabce8ad"><span class="section-number-3">4.1.</span> Translation rules</h3>
+<p>
+Define <code>T[]</code> as our translation scheme that takes an arbitrary lambda calculi term
+and converts it to an equivalent SKI combinator.
+</p>
+
+</section>
+<section id="slide-orgabce8ad-split">
+<p>
+Then we define <code>T[]</code> as follows:
+</p>
+
+<ol>
+<li class="fragment appear">\(T[x] => x\)</li>
+<li class="fragment appear">\(T[(E₁ E₂)] => (T[E₁] T[E₂])\)</li>
+<li class="fragment appear">\(T[λx.E] => \textbf{K}\ (T[E])\) if ¬occurs(x, E)</li>
+<li class="fragment appear">\(T[λx.x] => \textbf{I}\)</li>
+<li class="fragment appear">\(T[λx.λy.E] => T[λx.T[λy.E]]\) if occurs(x, E)</li>
+<li class="fragment appear">\(T[λx.(E₁ E₂)] => \textbf{S}\ T[λx.E₁] T[λx.E₂]\) if occurs(x, E₁) and occurs(x, E₂)</li>
+
+</ol>
+
+</section>
+<section id="slide-org19b0723">
+<h3 id="org19b0723"><span class="section-number-3">4.2.</span> Coded in Haskell&#x2026;</h3>
+<p>
+This is now in <code>Convert.hs</code>
+</p>
+<ul>
+<li>For <code>Var</code> and <code>App</code> those are just Rules 1, 2 respectively</li>
+<li>For <code>Abs</code>, I make a separate function to deal with them</li>
+<li>Actually we deal with Rule 5 already here - <code>abstract</code> "flattens" all lambdas!</li>
+
+</ul>
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">translate</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">Expr</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">translate</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Var</span> x<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SVar</span> x
+<span style="color: #8CDAFF;">translate</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">App</span> e1 e2<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">T</span> <span style="color: #C586C0;">(</span>translate e1<span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span>translate e2<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">translate</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Abs</span> x e<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> abstract x <span style="color: #C586C0;">(</span>translate e<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">translate</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Lit</span> x<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SLit</span> x
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org19b0723-split">
+
+<ul>
+<li>If we have a function application, then we apply Rule 6</li>
+<li>If we have a variable equal to the function argument, that's Rule 4</li>
+<li>Otherwise, we just have Rule 3</li>
+
+</ul>
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">abstract</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">Name</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">abstract</span> x <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> e1 e2<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> combS <span style="color: #C586C0;">(</span>abstract x e1<span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span>abstract x e2<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">abstract</span> x <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">SVar</span> n<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">|</span> x <span style="color: #E9FDAC;">==</span> n <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">I</span>
+<span style="color: #8CDAFF;">abstract</span> <span style="color: #FF5E5E;">_</span> k <span style="color: #E9FDAC;">=</span> combK k
+
+<span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">Show eta-reduction here...</span>
+<span style="color: #8CDAFF;">combS</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">combS</span> f <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">T</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">S</span> f<span style="color: #C586C0;">)</span>
+
+<span style="color: #8CDAFF;">combK</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">combK</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">K</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org73178fe">
+<h4 id="org73178fe"><span class="section-number-4">4.2.1.</span> Aside - Converting the <code>BinOp</code></h4>
+<p>
+Notice how the SKI calculus doesn't really support arithmetic - in this case
+we have to "desugar" them into the original 3 lambda terms - <code>Var</code>, <code>App</code> and
+ <code>Abs</code>.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">desugar</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">Expr</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">Expr</span>
+<span style="color: #8CDAFF;">desugar</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">App</span> e1 e2<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">App</span> <span style="color: #C586C0;">(</span>desugar e1<span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span>desugar e2<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">desugar</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Abs</span> x e<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">Abs</span> x <span style="color: #C586C0;">(</span>desugar e<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">desugar</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Op</span> op a b<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> foldl <span style="color: #E9FDAC;">App</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Var</span> n<span style="color: #C586C0;">)</span> args
+  <span style="color: #FF5E5E;">where</span>
+    args <span style="color: #E9FDAC;">=</span> map desugar <span style="color: #C586C0;">[</span>a,b<span style="color: #C586C0;">]</span>
+    n <span style="color: #E9FDAC;">=</span> <span style="color: #FF5E5E;">case</span> op <span style="color: #FF5E5E;">of</span>
+      <span style="color: #E9FDAC;">Plus</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #FBE3BF;">"$PLUS"</span>
+      <span style="color: #E9FDAC;">Minus</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #FBE3BF;">"$MINUS"</span>
+      <span style="color: #E9FDAC;">Mul</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #FBE3BF;">"$MUL"</span>
+      <span style="color: #E9FDAC;">Div</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #FBE3BF;">"$DIV"</span>
+<span style="color: #8CDAFF;">desugar</span> e <span style="color: #E9FDAC;">=</span> e
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org9c7dde9">
+<h4 id="org9c7dde9"><span class="section-number-4">4.2.2.</span> Translate + Desugar</h4>
+<p>
+We can now convert a lambda expression into the SKI combinators:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">convert</span> <span style="color: #E9FDAC;">=</span> translate <span style="color: #E9FDAC;">.</span> desugar
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org5556c02">
+<h4 id="org5556c02"><span class="section-number-4">4.2.3.</span> Testing out the converter</h4>
+<p>
+Lets convert the <code>sample</code> expression into the SKI equivalent:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">sampleSKI</span> <span style="color: #E9FDAC;">=</span> convert sample
+</code></pre>
+</div>
+
+</section>
+<section id="slide-orge6c410e">
+<h3 id="orge6c410e"><span class="section-number-3">4.3.</span> Coding a new SKI Evaluator</h3>
+<p>
+Since we now have special variables for arithmetic, we need to
+redefine our SKI evaluator.
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">eval'</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">SKI</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">eval'</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">I</span> x<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> eval' x <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">I x = x</span>
+<span style="color: #8CDAFF;">eval'</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">K</span> x<span style="color: #FC9354;">)</span> y<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> eval' x <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">K x y = x</span>
+<span style="color: #8CDAFF;">eval'</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #E9FDAC;">S</span> x<span style="color: #468800;">)</span> y<span style="color: #FC9354;">)</span> z<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> eval' <span style="color: #E9FDAC;">$</span> <span style="color: #E9FDAC;">T</span> <span style="color: #C586C0;">(</span><span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> x z<span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span><span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> y z<span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">S x y z = x z (y z)</span>
+<span style="color: #8CDAFF;">eval'</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">T</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">SVar</span> name<span style="color: #468800;">)</span> <span style="color: #468800;">(</span><span style="color: #E9FDAC;">SLit</span> x<span style="color: #468800;">)</span><span style="color: #FC9354;">)</span> <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">SLit</span> y<span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span>
+  <span style="color: #E9FDAC;">|</span> name <span style="color: #E9FDAC;">`elem`</span> <span style="color: #C586C0;">[</span><span style="color: #FBE3BF;">"$PLUS"</span>, <span style="color: #FBE3BF;">"$MINUS"</span>, <span style="color: #FBE3BF;">"$MUL"</span>, <span style="color: #FBE3BF;">"$DIV"</span><span style="color: #C586C0;">]</span> <span style="color: #E9FDAC;">=</span> arith name x y
+<span style="color: #8CDAFF;">eval'</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">T</span> x y<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">T</span> <span style="color: #C586C0;">(</span>eval' x<span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span>eval' y<span style="color: #C586C0;">)</span> <span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">If we have (x y), evaluate x and y</span>
+<span style="color: #8CDAFF;">eval'</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">SVar</span> name<span style="color: #C586C0;">)</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SVar</span> name
+<span style="color: #8CDAFF;">eval'</span> p <span style="color: #E9FDAC;">=</span> p
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">arith</span> <span style="color: #E9FDAC;">::</span> <span style="color: #E9FDAC;">Name</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">Int</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">Int</span> <span style="color: #E9FDAC;">-&gt;</span> <span style="color: #E9FDAC;">SKI</span>
+<span style="color: #8CDAFF;">arith</span> <span style="color: #FBE3BF;">"$PLUS"</span>  x y <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SLit</span> <span style="color: #C586C0;">(</span>x <span style="color: #E9FDAC;">+</span> y<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">arith</span> <span style="color: #FBE3BF;">"$MINUS"</span> x y <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SLit</span> <span style="color: #C586C0;">(</span>x <span style="color: #E9FDAC;">-</span> y<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">arith</span> <span style="color: #FBE3BF;">"$MUL"</span>   x y <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SLit</span> <span style="color: #C586C0;">(</span>x <span style="color: #E9FDAC;">*</span> y<span style="color: #C586C0;">)</span>
+<span style="color: #8CDAFF;">arith</span> <span style="color: #FBE3BF;">"$DIV"</span>   x y <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">SLit</span> <span style="color: #C586C0;">(</span>x <span style="color: #E9FDAC;">`div`</span> y<span style="color: #C586C0;">)</span>
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org5ec626f">
+<h3 id="org5ec626f"><span class="section-number-3">4.4.</span> More test cases</h3>
+<p>
+Evaluating <code>sampleSKI</code> is uninteresting, as we haven't fully applied the function yet&#x2026;
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">evalSample</span> <span style="color: #E9FDAC;">=</span> eval' sampleSKI
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org5ec626f-split">
+<p>
+Let's see what happens when we apply arguments to it:
+</p>
+
+<div class="org-src-container">
+
+<pre  class="src src-haskell" ><code trim><span style="color: #8CDAFF;">sampleApplied</span> <span style="color: #E9FDAC;">=</span> <span style="color: #E9FDAC;">App</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">App</span> sample <span style="color: #FC9354;">(</span><span style="color: #E9FDAC;">Lit</span> <span style="color: #FC9354; font-weight: bold;">2</span><span style="color: #FC9354;">)</span><span style="color: #C586C0;">)</span> <span style="color: #C586C0;">(</span><span style="color: #E9FDAC;">Lit</span> <span style="color: #FC9354; font-weight: bold;">4</span><span style="color: #C586C0;">)</span>
+
+<span style="color: #6D6D6D;">-- </span><span style="color: #6D6D6D;">3 * 2 + 4 = 10</span>
+<span style="color: #8CDAFF;">evalSampleApplied</span> <span style="color: #E9FDAC;">=</span> appUntil eval' <span style="color: #C586C0;">(</span>translate sampleApplied<span style="color: #C586C0;">)</span>
+
+<span style="color: #8CDAFF;">appUntil</span> f x <span style="color: #E9FDAC;">=</span> <span style="color: #FF5E5E;">let</span> y <span style="color: #E9FDAC;">=</span> f x <span style="color: #FF5E5E;">in</span> <span style="color: #FF5E5E;">if</span> x <span style="color: #E9FDAC;">==</span> y <span style="color: #FF5E5E;">then</span> x <span style="color: #FF5E5E;">else</span> appUntil f y
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-orgcb97426">
+<h2 id="orgcb97426"><span class="section-number-2">5.</span> References</h2>
+<ul>
+<li>"The Implementation of Functional Programming Languages", Simon Peyton Jones, 1987</li>
+<li><a href="https://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html">https://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html</a></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/markdown/markdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/zoom/zoom.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js/plugin/notes/notes.js"></script>
+
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+plugins: [RevealMarkdown, RevealZoom, RevealNotes]
+});
+
+</script>
+</body>
+</html>
