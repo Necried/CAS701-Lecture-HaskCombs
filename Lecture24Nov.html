@@ -18,21 +18,25 @@
 <div class="slides">
 
 <section>
-<section id="slide-org8d7ba7a">
-<h2 id="org8d7ba7a"><span class="section-number-2">1.</span> Preliminaries</h2>
+<section id="slide-org11ddd59">
+<h2 id="org11ddd59"><span class="section-number-2">1.</span> Preliminaries</h2>
 <div class="outline-text-2" id="text-1">
 </div>
 </section>
-<section id="slide-org2476e54">
-<h3 id="org2476e54"><span class="section-number-3">1.1.</span> Following along the presentation</h3>
+<section id="slide-orgd9122dc">
+<h3 id="orgd9122dc"><span class="section-number-3">1.1.</span> Following along the presentation</h3>
 <p>
 You can download this presentation as an org-mode file,
 along with all the source code here:
 </p>
 
+<p>
+<a href="https://github.com/Necried/CAS701-Lecture-HaskCombs">https://github.com/Necried/CAS701-Lecture-HaskCombs</a>
+</p>
+
 </section>
-<section id="slide-org7c8c723">
-<h3 id="org7c8c723"><span class="section-number-3">1.2.</span> Installing GHC</h3>
+<section id="slide-org7225ae6">
+<h3 id="org7225ae6"><span class="section-number-3">1.2.</span> Installing GHC</h3>
 <p>
 If you want to play around with the Haskell code, you need
 the Glasgow Haskell Compiler (GHC). Just go to this site
@@ -49,13 +53,13 @@ and it has all the instructions you need based on your OS.
 </section>
 </section>
 <section>
-<section id="slide-orgf4ac7d5">
-<h2 id="orgf4ac7d5"><span class="section-number-2">2.</span> Combinatory Logic with Haskell</h2>
+<section id="slide-org9621bd4">
+<h2 id="org9621bd4"><span class="section-number-2">2.</span> Combinatory Logic with Haskell</h2>
 <div class="outline-text-2" id="text-2">
 </div>
 </section>
-<section id="slide-orgd6e3a90">
-<h3 id="orgd6e3a90"><span class="section-number-3">2.1.</span> SKI Introduction</h3>
+<section id="slide-orgaf2c5b3">
+<h3 id="orgaf2c5b3"><span class="section-number-3">2.1.</span> SKI Introduction</h3>
 <p>
 Let's encode the SKI combinators as "normal" functions in Haskell:
 </p>
@@ -76,8 +80,8 @@ Let's encode the SKI combinators as "normal" functions in Haskell:
 </div>
 
 </section>
-<section id="slide-org7c9f61e">
-<h3 id="org7c9f61e"><span class="section-number-3">2.2.</span> What type of language is haskell?</h3>
+<section id="slide-orgef9a302">
+<h3 id="orgef9a302"><span class="section-number-3">2.2.</span> What type of language is haskell?</h3>
 <p>
 Haskell is:
 </p>
@@ -89,13 +93,13 @@ Haskell is:
 </ul>
 
 </section>
-<section id="slide-org4feba56">
-<h3 id="org4feba56"><span class="section-number-3">2.3.</span> Building an SKI combinator evaluator</h3>
+<section id="slide-org8645a73">
+<h3 id="org8645a73"><span class="section-number-3">2.3.</span> Building an SKI combinator evaluator</h3>
 <div class="outline-text-3" id="text-2-3">
 </div>
 </section>
-<section id="slide-orgb362b4f">
-<h4 id="orgb362b4f"><span class="section-number-4">2.3.1.</span> Defining Data Type</h4>
+<section id="slide-orgc05c519">
+<h4 id="orgc05c519"><span class="section-number-4">2.3.1.</span> Defining Data Type</h4>
 <p>
 We don't usually use the combinators above in everyday programming
 (although the K and I combinators are defined in the standard library
@@ -107,10 +111,10 @@ Let's try and build a new data type for the SKI combinators instead:
 </p>
 
 </section>
-<section id="slide-orgb362b4f-split">
+<section id="slide-orgc05c519-split">
 
 <p>
-The file is <code>CombinatorsData.hs</code>
+<span class="underline">The file is <code>CombinatorsData.hs</code></span>
 </p>
 <div class="org-src-container">
 
@@ -134,8 +138,8 @@ The last definition, <code>T SKI SKI</code>, acts like brackets, e.g. <code>T x 
 </p>
 
 </section>
-<section id="slide-org75354f4">
-<h4 id="org75354f4"><span class="section-number-4">2.3.2.</span> Evaluator and pretty printer</h4>
+<section id="slide-orgbbfe4de">
+<h4 id="orgbbfe4de"><span class="section-number-4">2.3.2.</span> Evaluator and pretty printer</h4>
 <p>
 We can define a simple evaluator:
 </p>
@@ -169,8 +173,8 @@ And also a simple "pretty" printer:
 </div>
 
 </section>
-<section id="slide-org252982b">
-<h4 id="org252982b"><span class="section-number-4">2.3.3.</span> Test code</h4>
+<section id="slide-orgdc2fbe9">
+<h4 id="orgdc2fbe9"><span class="section-number-4">2.3.3.</span> Test code</h4>
 <p>
 Now let's show that <code>SKKx</code> is equal to <code>x</code>
 </p>
@@ -185,14 +189,14 @@ Now let's show that <code>SKKx</code> is equal to <code>x</code>
 </section>
 </section>
 <section>
-<section id="slide-org52c9c58">
-<h2 id="org52c9c58"><span class="section-number-2">3.</span> Lambda Calculus in Haskell</h2>
+<section id="slide-orgef99d0c">
+<h2 id="orgef99d0c"><span class="section-number-2">3.</span> Lambda Calculus in Haskell</h2>
 <p>
 Let's now see Lambda Calculus in Haskell:
 </p>
 
 <p>
-The file is <code>Lambda.hs</code>
+<span class="underline">The file is <code>Lambda.hs</code></span>
 </p>
 <div class="org-src-container">
 
@@ -211,8 +215,8 @@ The file is <code>Lambda.hs</code>
 </div>
 
 </section>
-<section id="slide-orge91fb57">
-<h3 id="orge91fb57"><span class="section-number-3">3.1.</span> Added niceties</h3>
+<section id="slide-orgc6b00d9">
+<h3 id="orgc6b00d9"><span class="section-number-3">3.1.</span> Added niceties</h3>
 <p>
 With the <code>Var</code>, <code>App</code> and <code>Abs</code> constructor we have a the complete
 lambda calculus. But instead of encoding arithmetic with
@@ -224,7 +228,7 @@ the Church Numerals, I just hardcoded the arithmetic into the system.
 </p>
 
 </section>
-<section id="slide-orge91fb57-split">
+<section id="slide-orgc6b00d9-split">
 
 <p>
 We haven't defined our binary ops yet, they are just the normal arithmetic ones:
@@ -242,8 +246,8 @@ We haven't defined our binary ops yet, they are just the normal arithmetic ones:
 </div>
 
 </section>
-<section id="slide-org51061fe">
-<h3 id="org51061fe"><span class="section-number-3">3.2.</span> Example expression</h3>
+<section id="slide-org29dda87">
+<h3 id="org29dda87"><span class="section-number-3">3.2.</span> Example expression</h3>
 <p>
 With this, we can now define a simple arithmetic expression:
 </p>
@@ -271,8 +275,8 @@ Of course, this would be represented as
 </section>
 </section>
 <section>
-<section id="slide-org96125ac">
-<h2 id="org96125ac"><span class="section-number-2">4.</span> Converting Lambda Terms into Combinatory Logic</h2>
+<section id="slide-orgd539b79">
+<h2 id="orgd539b79"><span class="section-number-2">4.</span> Converting Lambda Terms into Combinatory Logic</h2>
 <p>
 Instead of creating an <code>eval</code> like we did for the SKI combinators for our lambda calculus,
 why don't we convert our lambda term into an SKI equivalent and make use of the evaluator
@@ -280,15 +284,15 @@ there instead!
 </p>
 
 </section>
-<section id="slide-orgabce8ad">
-<h3 id="orgabce8ad"><span class="section-number-3">4.1.</span> Translation rules</h3>
+<section id="slide-orgd7ea64a">
+<h3 id="orgd7ea64a"><span class="section-number-3">4.1.</span> Translation rules</h3>
 <p>
 Define <code>T[]</code> as our translation scheme that takes an arbitrary lambda calculi term
 and converts it to an equivalent SKI combinator.
 </p>
 
 </section>
-<section id="slide-orgabce8ad-split">
+<section id="slide-orgd7ea64a-split">
 <p>
 Then we define <code>T[]</code> as follows:
 </p>
@@ -304,10 +308,10 @@ Then we define <code>T[]</code> as follows:
 </ol>
 
 </section>
-<section id="slide-org19b0723">
-<h3 id="org19b0723"><span class="section-number-3">4.2.</span> Coded in Haskell&#x2026;</h3>
+<section id="slide-orgf9e119c">
+<h3 id="orgf9e119c"><span class="section-number-3">4.2.</span> Coded in Haskell&#x2026;</h3>
 <p>
-This is now in <code>Convert.hs</code>
+<span class="underline">This is now in <code>Convert.hs</code></span>
 </p>
 <ul>
 <li>For <code>Var</code> and <code>App</code> those are just Rules 1, 2 respectively</li>
@@ -326,7 +330,7 @@ This is now in <code>Convert.hs</code>
 </div>
 
 </section>
-<section id="slide-org19b0723-split">
+<section id="slide-orgf9e119c-split">
 
 <ul>
 <li>If we have a function application, then we apply Rule 6</li>
@@ -351,8 +355,8 @@ This is now in <code>Convert.hs</code>
 </div>
 
 </section>
-<section id="slide-org73178fe">
-<h4 id="org73178fe"><span class="section-number-4">4.2.1.</span> Aside - Converting the <code>BinOp</code></h4>
+<section id="slide-orge590bbd">
+<h4 id="orge590bbd"><span class="section-number-4">4.2.1.</span> Aside - Converting the <code>BinOp</code></h4>
 <p>
 Notice how the SKI calculus doesn't really support arithmetic - in this case
 we have to "desugar" them into the original 3 lambda terms - <code>Var</code>, <code>App</code> and
@@ -377,8 +381,8 @@ we have to "desugar" them into the original 3 lambda terms - <code>Var</code>, <
 </div>
 
 </section>
-<section id="slide-org9c7dde9">
-<h4 id="org9c7dde9"><span class="section-number-4">4.2.2.</span> Translate + Desugar</h4>
+<section id="slide-org2da4579">
+<h4 id="org2da4579"><span class="section-number-4">4.2.2.</span> Translate + Desugar</h4>
 <p>
 We can now convert a lambda expression into the SKI combinators:
 </p>
@@ -390,8 +394,8 @@ We can now convert a lambda expression into the SKI combinators:
 </div>
 
 </section>
-<section id="slide-org5556c02">
-<h4 id="org5556c02"><span class="section-number-4">4.2.3.</span> Testing out the converter</h4>
+<section id="slide-org0f09c08">
+<h4 id="org0f09c08"><span class="section-number-4">4.2.3.</span> Testing out the converter</h4>
 <p>
 Lets convert the <code>sample</code> expression into the SKI equivalent:
 </p>
@@ -403,8 +407,8 @@ Lets convert the <code>sample</code> expression into the SKI equivalent:
 </div>
 
 </section>
-<section id="slide-orge6c410e">
-<h3 id="orge6c410e"><span class="section-number-3">4.3.</span> Coding a new SKI Evaluator</h3>
+<section id="slide-orgea94518">
+<h3 id="orgea94518"><span class="section-number-3">4.3.</span> Coding a new SKI Evaluator</h3>
 <p>
 Since we now have special variables for arithmetic, we need to
 redefine our SKI evaluator.
@@ -435,8 +439,8 @@ redefine our SKI evaluator.
 </div>
 
 </section>
-<section id="slide-org5ec626f">
-<h3 id="org5ec626f"><span class="section-number-3">4.4.</span> More test cases</h3>
+<section id="slide-org8b79308">
+<h3 id="org8b79308"><span class="section-number-3">4.4.</span> More test cases</h3>
 <p>
 Evaluating <code>sampleSKI</code> is uninteresting, as we haven't fully applied the function yet&#x2026;
 </p>
@@ -448,7 +452,7 @@ Evaluating <code>sampleSKI</code> is uninteresting, as we haven't fully applied 
 </div>
 
 </section>
-<section id="slide-org5ec626f-split">
+<section id="slide-org8b79308-split">
 <p>
 Let's see what happens when we apply arguments to it:
 </p>
@@ -467,8 +471,8 @@ Let's see what happens when we apply arguments to it:
 </section>
 </section>
 <section>
-<section id="slide-orgcb97426">
-<h2 id="orgcb97426"><span class="section-number-2">5.</span> References</h2>
+<section id="slide-orgf4bf067">
+<h2 id="orgf4bf067"><span class="section-number-2">5.</span> References</h2>
 <ul>
 <li>"The Implementation of Functional Programming Languages", Simon Peyton Jones, 1987</li>
 <li><a href="https://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html">https://kseo.github.io/posts/2016-12-30-write-you-an-interpreter.html</a></li>

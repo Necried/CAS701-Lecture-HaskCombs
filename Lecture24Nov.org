@@ -12,6 +12,8 @@
 You can download this presentation as an org-mode file,
 along with all the source code here:
 
+https://github.com/Necried/CAS701-Lecture-HaskCombs
+
 ** Installing GHC
 
 If you want to play around with the Haskell code, you need
@@ -56,7 +58,7 @@ Let's try and build a new data type for the SKI combinators instead:
 
 #+REVEAL: split
 
-The file is ~CombinatorsData.hs~
+_The file is ~CombinatorsData.hs~_
 #+BEGIN_SRC haskell :tangle CombinatorsData.hs
 module CombinatorsData where
 
@@ -111,7 +113,7 @@ eval_skkx = eval skkx
 
 Let's now see Lambda Calculus in Haskell:
 
-The file is ~Lambda.hs~
+_The file is ~Lambda.hs~_
 #+BEGIN_SRC haskell :tangle Lambda.hs
 module Lambda where
 
@@ -186,7 +188,7 @@ Then we define ~T[]~ as follows:
 
 ** Coded in Haskell...
 
-This is now in ~Convert.hs~
+_This is now in ~Convert.hs~_
 #+BEGIN_SRC haskell :tangle Convert.hs :exports none
 module Convert where
 
